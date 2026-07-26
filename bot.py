@@ -54,19 +54,15 @@ MAPEO_ANIMALES = {
 def home():
     return (
         "¡El bot de AGENCIA HAROLD JOSE está activo!<br><br>"
-        "👉 <a href='/test/bloque'>Probar Envío de Tabla</a><br>"
-        "👉 <a href='/test/resultados'>Forzar Revisión de Resultados</a>"
+        "👉 <a href='/test/bloque'>Probar y Enviar Tabla Actualizada Ya</a><br>"
     )
 
 @app.route('/test/bloque')
 def test_bloque():
-    enviar_tabla_bloque("09:10 AM")
-    return "¡Prueba ejecutada!"
-
-@app.route('/test/resultados')
-def test_resultados():
+    # Al hacer clic en este enlace, primero lee la página web y luego envía la tabla de inmediato
     verificar_resultados()
-    return "¡Prueba ejecutada!"
+    enviar_tabla_bloque("09:10 AM")
+    return "¡Prueba ejecutada con éxito! Se revisó la página y se envió la tabla al canal de Telegram."
 
 def limpiar_texto(texto):
     return " ".join(texto.split())
@@ -117,7 +113,7 @@ def enviar_tabla_bloque(hora_corte="09:10 AM"):
         "        Mas de 6 años brindando\n"
         "            confianza y seguridad\n"
         "        en cada rincón de Venezuela\n"
-        "            ʀᴇꜱᴜʟᴛᴀᴅᴏꜱ ᴏꜰᛁᴄ𝙸ᴀʟᴇꜱ\n"
+        "            ʀᴇꜱᴜʟᴛ𝙰𝙳𝙾𝚂 ᴏꜰᛁᴄ𝙸ᴀʟᴇꜱ\n"
         "\"𝙻𝚊 𝚜𝚞𝚎𝚛𝚝𝚎 𝚎𝚜 𝚞𝚗𝚊 𝚏𝚕𝚎𝚌𝚑𝚊🏹𝚕𝚊𝚗𝚣𝚊𝚍𝚊 𝚚𝚞𝚎 𝚑𝚊𝚌𝚎 𝚋𝚕𝚊𝚗𝚌𝚘🎯𝚎𝚗 𝚎𝚕 𝚚𝚞𝚎 𝚖𝚎𝚗𝚘𝚜 𝚕𝚊 𝚎𝚜𝚙𝚎𝚛𝚊🤑\"\n"
         "📲JUEGA AQUI👇👇\n"
         "WHATSAPP: 04124489363\n"
