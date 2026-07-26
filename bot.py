@@ -27,7 +27,7 @@ URL_LOTERIA = 'https://lotery.winbigvzla.com/resultados'
 
 app = Flask('')
 
-# Almacén de resultados del día por bloques de hora
+# Almacén de resultados del día por horas en punto exactas (ej. "08:00", "09:00")
 registros_bloques = {}
 resultados_enviados = set()
 primera_ejecucion = True
@@ -53,21 +53,20 @@ MAPEO_ANIMALES = {
 @app.route('/')
 def home():
     return (
-        "¡El bot de AGENCIA HAROLD JOSE está activo y sincronizado!<br><br>"
-        "<b>Pruebas de Bloques:</b><br>"
-        "👉 <a href='/test/bloque'>Probar Envío de Tabla Bloque</a><br>"
+        "¡El bot de AGENCIA HAROLD JOSE está activo!<br><br>"
+        "👉 <a href='/test/bloque'>Probar Envío de Tabla</a><br>"
         "👉 <a href='/test/resultados'>Forzar Revisión de Resultados</a>"
     )
 
 @app.route('/test/bloque')
 def test_bloque():
     enviar_tabla_bloque("09:10 AM")
-    return "¡Prueba ejecutada! Se envió la tabla completa al canal."
+    return "¡Prueba ejecutada!"
 
 @app.route('/test/resultados')
 def test_resultados():
     verificar_resultados()
-    return "¡Prueba ejecutada! Se forzó la revisión."
+    return "¡Prueba ejecutada!"
 
 def limpiar_texto(texto):
     return " ".join(texto.split())
@@ -110,7 +109,6 @@ def formatear_resultado(texto_bruto):
 def enviar_tabla_bloque(hora_corte="09:10 AM"):
     global registros_bloques
     
-    # Encabezado exacto solicitado
     mensaje = (
         "╔═══════ ⋆★⋆ ═══════╗\n"
         "   ★𝙰𝙶𝙴𝙽𝙲𝙸𝙰 𝙷𝙰𝚁𝙾𝙻𝙳 𝙹𝙾𝚂𝙴★\n"
@@ -196,7 +194,6 @@ def enviar_tabla_bloque(hora_corte="09:10 AM"):
     mensaje += "\nMUCHA SUERTE EN SUS JUGADAS"
     
     enviar_telegram(mensaje)
-    print(f"📊 Tabla de bloque ({hora_corte}) enviada correctamente.")
 
 def verificar_resultados():
     global resultados_enviados, primera_ejecucion, registros_bloques
@@ -244,7 +241,12 @@ def verificar_resultados():
                 if not match_h:
                     continue
                 hora_completa = match_h.group(1).upper()
-                hora_corta = hora_completa[:5]
+                
+                # FILTRO ESTRICTO: Solo capturar horas en punto exactas (minutos '00')
+                if ":00" not in hora_completa:
+                    continue
+
+                hora_corta = hora_completa[:5] # Ej: "08:00", "09:00"
 
                 match_res = re.search(r'(\d{1,2}\s-\s[A-ZÁÉÍÓÚÑa-zñáéíóú]+(?:\s+[A-ZÁÉÍÓÚÑa-zñáéíóú]+)?)', texto_slot)
                 if not match_res:
@@ -253,7 +255,7 @@ def verificar_resultados():
                 resultado_bruto = limpiar_texto(match_res.group(1)).upper()
                 resultado_limpio = formatear_resultado(resultado_bruto)
                 
-                # Mapeo de loterías a abreviaturas exactas de la tabla
+                # Mapeo de loterías
                 abr_lot = ""
                 nl = nombre_loteria.upper()
                 if "GRANJITA" in nl: abr_lot = "GRAJ"
@@ -297,7 +299,7 @@ def loop_bot():
 
     schedule.every().day.at("00:00").do(limpiar_memoria_diaria)
     
-    # Programar envíos automáticos a los 10 minutos de cada hora
+    # Envíos automáticos a los 10 minutos de cada hora (ej. 08:10, 09:10...)
     for hora in ["08:10", "09:10", "10:10", "11:10", "12:10", "13:10", "14:10", "15:10", "16:10", "17:10", "18:10", "19:10", "20:10", "21:10"]:
         h_str, m_str = hora.split(":")
         h_int = int(h_str)
