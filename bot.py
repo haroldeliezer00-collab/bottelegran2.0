@@ -15,7 +15,6 @@ from threading import Thread
 from flask import Flask
 import re
 import urllib3
-from datetime import datetime
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -27,8 +26,7 @@ URL_LOTERIA = 'https://lotery.winbigvzla.com/resultados'
 
 app = Flask('')
 
-# Almacén de resultados del día por horas en punto exactas (ej. "08:00", "09:00")
-registros_bloques = {}
+# Memoria para evitar repetir resultados ya enviados
 resultados_enviados = set()
 primera_ejecucion = True
 
@@ -52,17 +50,7 @@ MAPEO_ANIMALES = {
 
 @app.route('/')
 def home():
-    return (
-        "¡El bot de AGENCIA HAROLD JOSE está activo!<br><br>"
-        "👉 <a href='/test/bloque'>Probar y Enviar Tabla Actualizada Ya</a><br>"
-    )
-
-@app.route('/test/bloque')
-def test_bloque():
-    # Al hacer clic en este enlace, primero lee la página web y luego envía la tabla de inmediato
-    verificar_resultados()
-    enviar_tabla_bloque("09:10 AM")
-    return "¡Prueba ejecutada con éxito! Se revisó la página y se envió la tabla al canal de Telegram."
+    return "¡El bot de AGENCIA HAROLD JOSE está activo y pasando resultados individuales con normalidad!"
 
 def limpiar_texto(texto):
     return " ".join(texto.split())
@@ -83,9 +71,8 @@ def enviar_telegram(mensaje):
         print(f"⚠️ Excepción de conexión: {e}")
 
 def limpiar_memoria_diaria():
-    global resultados_enviados, primera_ejecucion, registros_bloques
+    global resultados_enviados, primera_ejecucion
     resultados_enviados.clear()
-    registros_bloques.clear()
     primera_ejecucion = True
     print("🧹 Memoria limpiada para el nuevo día.")
 
@@ -102,97 +89,8 @@ def formatear_resultado(texto_bruto):
         return f"{num}{emoji}"
     return texto_bruto
 
-def enviar_tabla_bloque(hora_corte="09:10 AM"):
-    global registros_bloques
-    
-    mensaje = (
-        "╔═══════ ⋆★⋆ ═══════╗\n"
-        "   ★𝙰𝙶𝙴𝙽𝙲𝙸𝙰 𝙷𝙰𝚁𝙾𝙻𝙳 𝙹𝙾𝚂𝙴★\n"
-        "  ╚═══════ ⋆★⋆ ═══════╝\n"
-        "╭⊰ 𝚂𝙴𝙶𝚄𝚁𝙸𝙳𝙰𝙳 𝚈 𝙲𝙾𝙽𝙵𝙸𝙰𝙽𝚉𝙰 ⊱╮\n"
-        "        Mas de 6 años brindando\n"
-        "            confianza y seguridad\n"
-        "        en cada rincón de Venezuela\n"
-        "            ʀᴇꜱᴜʟᴛ𝙰𝙳𝙾𝚂 ᴏꜰᛁᴄ𝙸ᴀʟᴇꜱ\n"
-        "\"𝙻𝚊 𝚜𝚞𝚎𝚛𝚝𝚎 𝚎𝚜 𝚞𝚗𝚊 𝚏𝚕𝚎𝚌𝚑𝚊🏹𝚕𝚊𝚗𝚣𝚊𝚍𝚊 𝚚𝚞𝚎 𝚑𝚊𝚌𝚎 𝚋𝚕𝚊𝚗𝚌𝚘🎯𝚎𝚗 𝚎𝚕 𝚚𝚞𝚎 𝚖𝚎𝚗𝚘𝚜 𝚕𝚊 𝚎𝚜𝚙𝚎𝚛𝚊🤑\"\n"
-        "📲JUEGA AQUI👇👇\n"
-        "WHATSAPP: 04124489363\n"
-        "📰RESULTADOS ANIMALITOS📰\n"
-        "➖➖➖➖➖➖➖➖➖➖\n"
-    )
-
-    horas_registradas = sorted(list(registros_bloques.keys()))
-    if not horas_registradas:
-        horas_registradas = ["08:00"]
-
-    # 1. GRAJ, L.ACT, SELV
-    mensaje += " HORA🎰GRAJ🪙L.ACT🪙SELV\n"
-    for h in horas_registradas:
-        g = registros_bloques[h].get('GRAJ', '....🚫')
-        la = registros_bloques[h].get('L.ACT', '....🚫')
-        s = registros_bloques[h].get('SELV', '....🚫')
-        mensaje += f"⏰{h}  {g:<6} {la:<6} {s}\n"
-
-    # 2. G.ARO, CHAIM, MONJE
-    mensaje += "\n HORA🎰G.ARO🪙CHAIM🪙MONJE\n"
-    for h in horas_registradas:
-        ga = registros_bloques[h].get('G.ARO', '....🚫')
-        ch = registros_bloques[h].get('CHAIM', '....🚫')
-        mo = registros_bloques[h].get('MONJE', '....🚫')
-        mensaje += f"⏰{h}  {ga:<6} {ch:<6} {mo}\n"
-
-    # 3. L.ANIM, L.PANT, L.REAL
-    mensaje += "\n HORA🎰L.ANIM🪙L.PANT🪙L.REAL\n"
-    for h in horas_registradas:
-        lan = registros_bloques[h].get('L.ANIM', '....🚫')
-        lpa = registros_bloques[h].get('L.PANT', '....🚫')
-        lre = registros_bloques[h].get('L.REAL', '....🚫')
-        mensaje += f"⏰{h}  {lan:<6} {lpa:<6} {lre}\n"
-
-    # 4. L.RD, CEN.A, MEGA
-    mensaje += "\n HORA🎰L.RD🪙CEN.A🪙MEGA\n"
-    for h in horas_registradas:
-        lrd = registros_bloques[h].get('L.RD', '....🚫')
-        cena = registros_bloques[h].get('CEN.A', '....🚫')
-        mega = registros_bloques[h].get('MEGA', '....🚫')
-        mensaje += f"⏰{h}  {lrd:<6} {cena:<6} {mega}\n"
-
-    # 5. R.PER, R.COL, R.VEN
-    mensaje += "\n HORA🎰R.PER🪙R.COL🪙R.VEN\n"
-    for h in horas_registradas:
-        rper = registros_bloques[h].get('R.PER', '....🚫')
-        rcol = registros_bloques[h].get('R.COL', '....🚫')
-        rven = registros_bloques[h].get('R.VEN', '....🚫')
-        mensaje += f"⏰{h}  {rper:<6} {rcol:<6} {rven}\n"
-
-    # 6. COND, FRUI, TROP
-    mensaje += "\n HORA🎰COND🪙FRUI🪙TROP\n"
-    for h in horas_registradas:
-        cond = registros_bloques[h].get('COND', '....🚫')
-        fru = registros_bloques[h].get('FRUI', '....🚫')
-        trop = registros_bloques[h].get('TROP', '....🚫')
-        mensaje += f"⏰{h}  {cond:<6} {fru:<6} {trop}\n"
-
-    # 7. G.MIL, ZOOL, L.MAX
-    mensaje += "\n HORA🎰G.MIL🪙ZOOL🪙L.MAX\n"
-    for h in horas_registradas:
-        gmil = registros_bloques[h].get('G.MIL', '....🚫')
-        zool = registros_bloques[h].get('ZOOL', '....🚫')
-        lmax = registros_bloques[h].get('L.MAX', '....🚫')
-        mensaje += f"⏰{h}  {gmil:<6} {zool:<6} {lmax}\n"
-
-    # 8. C.ANI
-    mensaje += "\n HORA🎰C.ANI🪙\n"
-    for h in horas_registradas:
-        cani = registros_bloques[h].get('C.ANI', '....🚫')
-        mensaje += f"⏰{h}  {cani}\n"
-
-    mensaje += "\nMUCHA SUERTE EN SUS JUGADAS"
-    
-    enviar_telegram(mensaje)
-
 def verificar_resultados():
-    global resultados_enviados, primera_ejecucion, registros_bloques
+    global resultados_enviados, primera_ejecucion
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'}
         respuesta = requests.get(URL_LOTERIA, headers=headers, timeout=15)
@@ -237,12 +135,6 @@ def verificar_resultados():
                 if not match_h:
                     continue
                 hora_completa = match_h.group(1).upper()
-                
-                # FILTRO ESTRICTO: Solo capturar horas en punto exactas (minutos '00')
-                if ":00" not in hora_completa:
-                    continue
-
-                hora_corta = hora_completa[:5] # Ej: "08:00", "09:00"
 
                 match_res = re.search(r'(\d{1,2}\s-\s[A-ZÁÉÍÓÚÑa-zñáéíóú]+(?:\s+[A-ZÁÉÍÓÚÑa-zñáéíóú]+)?)', texto_slot)
                 if not match_res:
@@ -250,61 +142,37 @@ def verificar_resultados():
 
                 resultado_bruto = limpiar_texto(match_res.group(1)).upper()
                 resultado_limpio = formatear_resultado(resultado_bruto)
-                
-                # Mapeo de loterías
-                abr_lot = ""
-                nl = nombre_loteria.upper()
-                if "GRANJITA" in nl: abr_lot = "GRAJ"
-                elif "ACTIVA" in nl: abr_lot = "L.ACT"
-                elif "SELVA" in nl: abr_lot = "SELV"
-                elif "GUACHARO" in nl: abr_lot = "G.ARO"
-                elif "CHAIMA" in nl: abr_lot = "CHAIM"
-                elif "MONJE" in nl: abr_lot = "MONJE"
-                elif "ANIMALITOS" in nl and "PANTERA" not in nl and "REAL" not in nl and "CHANCE" not in nl and "MEGA" not in nl: abr_lot = "L.ANIM"
-                elif "PANTERITA" in nl or "PANTERA" in nl: abr_lot = "L.PANT"
-                elif "REAL" in nl: abr_lot = "L.REAL"
-                elif "RED" in nl or " R.D" in nl: abr_lot = "L.RD"
-                elif "CENTAURO" in nl or "CENTAVOS" in nl: abr_lot = "CEN.A"
-                elif "MEGA" in nl: abr_lot = "MEGA"
-                elif "PERUANA" in nl or "PERMUTA" in nl: abr_lot = "R.PER"
-                elif "COLOMBIA" in nl or "LOCA" in nl: abr_lot = "R.COL"
-                elif "VENEZUELA" in nl: abr_lot = "R.VEN"
-                elif "CONDE" in nl: abr_lot = "COND"
-                elif "FRUTAL" in nl: abr_lot = "FRUI"
-                elif "TROPICAL" in nl: abr_lot = "TROP"
-                elif "MILLONARIO" in nl: abr_lot = "G.MIL"
-                elif "ZODIACO" in nl or "ZOODIACO" in nl: abr_lot = "ZOOL"
-                elif "MAX" in nl: abr_lot = "L.MAX"
-                elif "CHANCE" in nl: abr_lot = "C.ANI"
 
-                if abr_lot:
-                    if hora_corta not in registros_bloques:
-                        registros_bloques[hora_corta] = {}
-                    registros_bloques[hora_corta][abr_lot] = resultado_limpio
+                clave_resultado = f"{nombre_loteria}_{hora_completa}_{resultado_limpio}"
+
+                if primera_ejecucion:
+                    resultados_enviados.add(clave_resultado)
+                    continue
+
+                if clave_resultado not in resultados_enviados:
+                    resultados_enviados.add(clave_resultado)
+                    
+                    mensaje = (
+                        "╔═══════ ⋆★⋆ ═══════╗\n"
+                        "   ★𝙰𝙶𝙴𝙽𝙲𝙸𝙰 𝙷𝙰𝚁𝙾𝙻𝙳 𝙹𝙾𝚂𝙴★\n"
+                        "  ╚═══════ ⋆★⋆ ═══════╝\n"
+                        f"📰 *{nombre_loteria}*\n"
+                        f"⏰ Hora: {hora_completa}\n"
+                        f"🎯 Resultado: {resultado_limpio}\n"
+                        "📲 WHATSAPP: 04124489363"
+                    )
+                    enviar_telegram(mensaje)
 
         if primera_ejecucion:
             primera_ejecucion = False
-            print("🚀 Sincronización inicial completa.")
-            return
+            print("🚀 Sincronización inicial completa. Resultados actuales guardados.")
 
     except Exception as e:
         print(f"⚠️ Error general: {e}")
 
 def loop_bot():
     verificar_resultados()
-
     schedule.every().day.at("00:00").do(limpiar_memoria_diaria)
-    
-    # Envíos automáticos a los 10 minutos de cada hora (ej. 08:10, 09:10...)
-    for hora in ["08:10", "09:10", "10:10", "11:10", "12:10", "13:10", "14:10", "15:10", "16:10", "17:10", "18:10", "19:10", "20:10", "21:10"]:
-        h_str, m_str = hora.split(":")
-        h_int = int(h_str)
-        suf = "AM" if h_int < 12 else "PM"
-        h_12 = h_int if h_int <= 12 else h_int - 12
-        if h_12 == 0: h_12 = 12
-        hora_label = f"{h_12:02d}:{m_str} {suf}"
-        schedule.every().day.at(hora).do(lambda hl=hora_label: enviar_tabla_bloque(hl))
-
     schedule.every(1).minute.do(verificar_resultados)
 
     while True:
