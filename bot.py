@@ -206,7 +206,7 @@ def enviar_saludo_matutino():
         "Por aquí estaremos compartiendo todos los resultados de los animalitos a medida que vayan saliendo.\n\n"
         "📢 Nuestros canales oficiales:\n"
         "🎟️ Catálogo y WhatsApp: https://wa.me/c/584124489363\n"
-        "📸 Instagram: https://www.instagram.com/agharold\\_jose (@agharold\\_jose)\n"
+        "📸 Instagram: https://www.instagram.com/agharold.jose (@agharold.jose)\n"
         "💬 Canal de WhatsApp: https://whatsapp.com/channel/0029Vaza7YIGzzKJq7as7s1T\n\n"
         "¡Mucha suerte en sus jugadas el día de hoy y a ganar! 🍀🔥"
     )
@@ -251,7 +251,6 @@ def verificar_resultados():
                 try:
                     res_ofi = requests.get(url_ofi, headers=headers, timeout=10, verify=False)
                     if res_ofi.status_code == 200:
-                        # Procesamiento secundario individual si fuera necesario
                         pass
                 except:
                     pass
