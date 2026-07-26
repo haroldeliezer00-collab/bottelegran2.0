@@ -16,6 +16,7 @@ from flask import Flask
 import re
 import urllib3
 from datetime import datetime
+import random
 
 # Desactivar advertencias de certificados SSL por seguridad con páginas del Estado
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -143,7 +144,6 @@ def generar_piramide():
         filas.append(siguiente)
     
     lineas_formateadas = []
-    max_len = len(filas[0])
     for i, f in enumerate(filas):
         nums_str = "  ".join(str(d) for d in f)
         dots_count = 3 + (i * 2)
@@ -152,9 +152,32 @@ def generar_piramide():
     
     cuerpo_piramide = "\n".join(lineas_formateadas)
     
-    # Generar datos claves dinámicos basados en la pirámide calculada
-    d1 = f"{filas[0][0]}{filas[0][1]}-{filas[1][0]}{filas[1][1]}-{filas[0][3]}{filas[0][4]}"
-    d2 = f"{filas[1][1]}{filas[1][2]}-{filas[2][0]}{filas[2][1]}-{filas[0][6]}{filas[0][7]}"
+    # Generación determinística de datos claves en el rango de 00 a 36 basados en la fecha
+    seed_val = int(ahora.strftime("%Y%m%d"))
+    rnd = random.Random(seed_val)
+    
+    candidates = []
+    for f in filas:
+        for idx in range(len(f) - 1):
+            val = (f[idx] * 10 + f[idx+1]) % 37
+            candidates.append(f"{val:02d}")
+        for num in f:
+            val2 = (num * 7 + idx) % 37
+            candidates.append(f"{val2:02d}")
+            
+    unique_candidates = []
+    for c in candidates:
+        if c not in unique_candidates:
+            unique_candidates.append(c)
+            
+    while len(unique_candidates) < 6:
+        val_rand = rnd.randint(0, 36)
+        c_rand = f"{val_rand:02d}"
+        if c_rand not in unique_candidates:
+            unique_candidates.append(c_rand)
+            
+    d1 = f"{unique_candidates[0]}-{unique_candidates[1]}-{unique_candidates[2]}"
+    d2 = f"{unique_candidates[3]}-{unique_candidates[4]}-{unique_candidates[5]}"
     
     mensaje = (
         "🎯 CENTRO DE APUESTAS HAROLD JOSÉ 🎯\n"
