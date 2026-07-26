@@ -159,14 +159,7 @@ def limpiar_memoria_diaria():
 def detectar_taquilla_privada(message):
     global taquilla_activa_hoy, imagen_activa_id
     
-    hoy = datetime.now().date()
-    
-    # Excluir domingos (weekday 6)
-    if hoy.weekday() == 6:
-        print("Domingo detectado: El bot ignora la activación de taquilla.")
-        return
-
-    # Verificar si el mensaje tiene la frase clave en la descripción
+    # Verificación de la frase clave en la descripción (sin restricciones de días)
     caption = message.caption if message.caption else ""
     if "taquilla activa" in caption.lower():
         imagen_activa_id = message.photo[-1].file_id
@@ -186,13 +179,8 @@ def detectar_taquilla_privada(message):
 
 def tarea_refuerzo_tarde():
     global taquilla_activa_hoy, imagen_activa_id
-    hoy = datetime.now().date()
     
-    # Los domingos no aplica
-    if hoy.weekday() == 6:
-        return
-
-    # Si la taquilla fue activada hoy en la mañana, refuerza a las 3:30 p.m.
+    # Si la taquilla fue activada hoy, refuerza a las 3:30 p.m. cualquier día de la semana
     if taquilla_activa_hoy and imagen_activa_id:
         print("Ejecutando refuerzo de taquilla de las 3:30 p.m.")
         try:
