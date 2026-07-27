@@ -22,9 +22,9 @@ import telebot
 # Desactivar advertencias de certificados SSL por seguridad con páginas del Estado
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# Credenciales actualizadas
+# Credenciales y canal principal actualizado
 TOKEN = '8698848083:AAGa5S9cBp_E8UYSMskNDiC76P3qLY12HJA'
-CANAL = '@pruebajsj'
+CANAL = '@resultadosagharoldjose'
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -69,7 +69,7 @@ def home():
     estado_texto = "ACTIVA" if taquilla_activa_hoy else "INACTIVA"
     color_estado = "green" if taquilla_activa_hoy else "red"
     return (
-        f"¡El bot de resultados AG HAROLD JOSE está activo en el canal @pruebajsj!<br>"
+        f"¡El bot de resultados AG HAROLD JOSE está activo en el canal @resultadosagharoldjose!<br>"
         f"Estado de la Taquilla Hoy: <b style='color: {color_estado};'>{estado_texto}</b><br><br>"
         "<b>Enlaces de prueba rápida (Test):</b><br>"
         "👉 <a href='/test/madrugada'>Probar Saludo de Madrugada (6:30 AM)</a><br>"
@@ -131,7 +131,7 @@ def limpiar_texto(texto):
     return " ".join(texto.split())
 
 def enviar_telegram(mensaje, disable_web_preview=True):
-    """Función centralizada para enviar mensajes al canal oficial de prueba."""
+    """Función centralizada para enviar mensajes al canal oficial."""
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {
         "chat_id": CANAL, 
@@ -159,7 +159,6 @@ def limpiar_memoria_diaria():
 def detectar_taquilla_privada(message):
     global taquilla_activa_hoy, imagen_activa_id
     
-    # Verificación de la frase clave en la descripción (sin restricciones de días)
     caption = message.caption if message.caption else ""
     if "taquilla activa" in caption.lower():
         imagen_activa_id = message.photo[-1].file_id
@@ -180,7 +179,6 @@ def detectar_taquilla_privada(message):
 def tarea_refuerzo_tarde():
     global taquilla_activa_hoy, imagen_activa_id
     
-    # Si la taquilla fue activada hoy, refuerza a las 3:30 p.m. cualquier día de la semana
     if taquilla_activa_hoy and imagen_activa_id:
         print("Ejecutando refuerzo de taquilla de las 3:30 p.m.")
         try:
