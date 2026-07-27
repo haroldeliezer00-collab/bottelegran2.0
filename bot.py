@@ -48,6 +48,7 @@ ENLACES_OFICIALES = {
 # Variables de estado diario para la Taquilla
 taquilla_activa_hoy = False
 imagen_activa_id = None
+ultimo_id_foto_canal = None
 
 TEXTO_TAQUILLA = (
     "✅ AG HAROLD JOSÉ ACTIVA ✅\n"
@@ -147,34 +148,50 @@ def enviar_telegram(mensaje, disable_web_preview=True):
         print(f"⚠️ Excepción de conexión con Telegram: {e}")
 
 def limpiar_memoria_diaria():
-    global resultados_enviados, primera_ejecucion, taquilla_activa_hoy, imagen_activa_id
+    global resultados_enviados, primera_ejecucion, taquilla_activa_hoy, imagen_activa_id, ultimo_id_foto_canal
     resultados_enviados.clear()
     primera_ejecucion = True
     taquilla_activa_hoy = False
     imagen_activa_id = None
+    ultimo_id_foto_canal = None
     print("🧹 Memoria de resultados y estado de taquilla limpiados para arrancar el nuevo día.")
 
 # --- DETECTOR AUTOMÁTICO DE TAQUILLA ACTIVA DESDE EL CANAL ---
-@bot.channel_post_handler(content_types=['photo'])
-def detectar_taquilla_privada(message):
+def activar_taquilla_proceso():
     global taquilla_activa_hoy, imagen_activa_id
-    
+    if not imagen_activa_id:
+        return
+    taquilla_activa_hoy = True
+    print(f"¡Taquilla activada manualmente desde el canal!")
+    try:
+        bot.send_photo(
+            chat_id=CANAL,
+            photo=imagen_activa_id,
+            caption=TEXTO_TAQUILLA
+        )
+        print("Mensaje de taquilla activa enviado al canal con éxito.")
+    except Exception as e:
+        print(f"Error al enviar la taquilla al canal: {e}")
+
+@bot.channel_post_handler(content_types=['photo'])
+def capturar_foto_canal(message):
+    global ultimo_id_foto_canal, imagen_activa_id
+    if message.photo:
+        ultimo_id_foto_canal = message.photo[-1].file_id
+        
     caption = message.caption if message.caption else ""
     if "taquilla activa" in caption.lower():
-        imagen_activa_id = message.photo[-1].file_id
-        taquilla_activa_hoy = True
-        
-        print(f"¡Taquilla activada manualmente desde el canal!")
-        
-        try:
-            bot.send_photo(
-                chat_id=CANAL,
-                photo=imagen_activa_id,
-                caption=TEXTO_TAQUILLA
-            )
-            print("Mensaje de taquilla activa enviado al canal con éxito.")
-        except Exception as e:
-            print(f"Error al enviar la taquilla al canal: {e}")
+        imagen_activa_id = ultimo_id_foto_canal
+        activar_taquilla_proceso()
+
+@bot.channel_post_handler(content_types=['text'])
+def capturar_texto_canal(message):
+    global imagen_activa_id, ultimo_id_foto_canal
+    text = message.text if message.text else ""
+    if "taquilla activa" in text.lower():
+        if ultimo_id_foto_canal:
+            imagen_activa_id = ultimo_id_foto_canal
+            activar_taquilla_proceso()
 
 def tarea_refuerzo_tarde():
     global taquilla_activa_hoy, imagen_activa_id
